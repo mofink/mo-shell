@@ -9,24 +9,14 @@
 #include <optional>
 #include <stdlib.h>
 
-std::optional<std::string> get_exec_path_if_exists(const std::string& exec_name)
+#include "file_interface.hpp"
+
+
+
+
+int main(int argc, char *argv[])
 {
-    const std::string env = std::getenv("PATH");
-    std::vector<std::string> env_paths;
-    std::stringstream ss;
-    ss << env;
-    std::string env_path;
-    while (std::getline(ss, env_path, ':'))
-    {
-        env_paths.push_back(env_path + "/" + exec_name);
-    }
 
-    auto loc = std::find_if(env_paths.begin(), env_paths.end(), [](const auto& s) { return std::filesystem::exists(s); });
-
-    return loc != env_paths.end() ? std::optional<std::string>{*loc} : std::nullopt;
-}
-
-int main() {
     // Flush after every std::cout / std:cerr
     std::cout << std::unitbuf;
     std::cerr << std::unitbuf;
@@ -57,7 +47,7 @@ int main() {
             }
             else
             {
-                std::optional<std::string> exec_path = get_exec_path_if_exists(str);
+                std::optional<std::string> exec_path = shell::get_exec_path_if_exists(str);
                 if (exec_path.has_value())
                 {
                     std::cout << str << " is " << *exec_path << std::endl;
@@ -71,7 +61,7 @@ int main() {
         else 
         {
             std::size_t first_space_idx = input.find_first_of(' ');
-            std::optional<std::string> exec_path = (first_space_idx != std::string::npos ? get_exec_path_if_exists(input.substr(0, first_space_idx)) : std::nullopt);
+            std::optional<std::string> exec_path = (first_space_idx != std::string::npos ? shell::get_exec_path_if_exists(input.substr(0, first_space_idx)) : std::nullopt);
             
             if (exec_path.has_value())
             {
