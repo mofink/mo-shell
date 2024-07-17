@@ -8,10 +8,15 @@
 #include <filesystem>
 #include <optional>
 #include <stdlib.h>
+#include <source_location>
 
 #include "file_interface.hpp"
 
 
+namespace shell
+{
+    std::filesystem::path current_dir;
+}
 
 
 int main(int argc, char *argv[])
@@ -20,14 +25,15 @@ int main(int argc, char *argv[])
     // Flush after every std::cout / std:cerr
     std::cout << std::unitbuf;
     std::cerr << std::unitbuf;
-
-    std::unordered_set<std::string> cmds = {"exit", "echo", "type"};
+    
+    shell::current_dir = std::filesystem::path(std::source_location::current().file_name()).parent_path();
+    std::unordered_set<std::string> cmds = {"exit", "echo", "type", "cd"};
 
     std::cout << "$ ";
 
     std::string input;
 
-    while (std::getline(std::cin, input) && input.find("exit") != 0)
+    while (std::getline(std::cin, input) && input.find("q") != 0 && input.find("exit") != 0)
     {  
         if (input.find("echo") == 0)
         {
@@ -58,10 +64,18 @@ int main(int argc, char *argv[])
                 }
             }
         }
+	else if (input.find("cd") == 0)
+	{
+	    std::size_t first_space_idx = input.find_first_of(' ');
+	    if (first_space_idx == std::string::npos)
+	    {
+                shell::current_dir = std::string(std::getenv("HOME"));
+	    }
+	}
         else 
         {
             std::size_t first_space_idx = input.find_first_of(' ');
-            std::optional<std::string> exec_path = (first_space_idx != std::string::npos ? shell::get_exec_path_if_exists(input.substr(0, first_space_idx)) : std::nullopt);
+            std::optional<std::string> exec_path = shell::get_exec_path_if_exists(input.substr(0, first_space_idx));
             
             if (exec_path.has_value())
             {
